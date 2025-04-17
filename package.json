@@ -1,0 +1,18 @@
+{
+  "name": "eastercreatures",
+  "version": "1.0.0",
+  "description": "A pokemon inspired game based on an Easter theme",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "phaser": "^3.88.2"
+  },
+  "devDependencies": {
+    "vite": "^6.2.3"
+  }
+}
