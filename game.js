@@ -12,16 +12,16 @@ class EasterGame extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('background', 'assets/backyard.png');
-        this.load.tilemapTiledJSON('map', 'assets/backyard.tmj');
-        this.load.image('tiles', 'assets/backyard.png');
-        this.load.spritesheet('player_walk_down', 'assets/FrontPlayerWalk.png', { frameWidth: 32, frameHeight: 32 });
-        this.load.spritesheet('player_walk_right', 'assets/RightPlayerWalk.png', { frameWidth: 32, frameHeight: 32 });
-        this.load.spritesheet('player_walk_left', 'assets/LeftPlayerWalk.png', { frameWidth: 32, frameHeight: 32 });
-        this.load.spritesheet('player_walk_up', 'assets/BackPlayerWalk.png', { frameWidth: 32, frameHeight: 32 });
-        this.load.spritesheet('pipichick', 'assets/pipichick.png', { frameWidth: 32, frameHeight: 32 });
-        this.load.spritesheet('projectile', 'assets/easteregg3.png', { frameWidth: 32, frameHeight: 32 });
-        this.load.spritesheet('legendary', 'assets/legendary.png', { frameWidth: 128, frameHeight: 128 });
+        this.load.image('background', '/assets/backyard.png');
+        this.load.tilemapTiledJSON('map', '/assets/backyard.tmj');
+        this.load.image('tiles', '/assets/backyard.png');
+        this.load.spritesheet('player_walk_down', '/assets/FrontPlayerWalk.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('player_walk_right', '/assets/RightPlayerWalk.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('player_walk_left', '/assets/LeftPlayerWalk.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('player_walk_up', '/assets/BackPlayerWalk.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('pipichick', '/assets/pipichick.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('projectile', '/assets/easteregg3.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('legendary', '/assets/legendary.png', { frameWidth: 128, frameHeight: 128 });
     }
 
     create() {
