@@ -21,7 +21,7 @@ class EasterGame extends Phaser.Scene {
         this.load.spritesheet('player_walk_up', '/assets/BackPlayerWalk.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('pipichick', '/assets/pipichick.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('projectile', '/assets/easteregg3.png', { frameWidth: 32, frameHeight: 32 });
-        this.load.spritesheet('legendary', '/assets/legendary.png', { frameWidth: 128, frameHeight: 128 });
+        this.load.spritesheet('legendary', '/assets/Legendary.png', { frameWidth: 128, frameHeight: 128 });
     }
 
     create() {
