@@ -6,7 +6,7 @@ class EasterGame extends Phaser.Scene {
         this.moveDelay = 200;
         this.lastMoveTime = 0;
         this.tileSize = 32;
-        this.maxChicks = 10;
+        this.maxChicks = 5;
         this.lastDirection = 'down';
         this.legendarySpawned = false;
     }
@@ -22,12 +22,16 @@ class EasterGame extends Phaser.Scene {
         this.load.spritesheet('pipichick', '/assets/pipichick.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('projectile', '/assets/easteregg3.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('legendary', '/assets/Legendary.png', { frameWidth: 128, frameHeight: 128 });
+        this.load.spritesheet('firework', 'assets/pinkFW.png', { frameWidth: 128, frameHeight: 128 });
     }
 
     create() {
         const bg = this.add.image(0, 0, 'background').setOrigin(0, 0);
         this.physics.world.setBounds(32, 32, bg.width - 64, bg.height - 64);
 
+        // Firework anims
+        this.anims.create({ key: 'firework_rise', frames: this.anims.generateFrameNumbers('firework', { start: 0, end: 5 }), frameRate: 10, repeat: -1 });
+        this.anims.create({ key: 'firework_burst', frames: this.anims.generateFrameNumbers('firework', { start: 6, end: 13 }), frameRate: 10, repeat: 0 });
         // Player setup
         this.anims.create({ key: 'walk_down', frames: this.anims.generateFrameNumbers('player_walk_down', { start: 0, end: 3 }), frameRate: 4, repeat: -1 });
         this.anims.create({ key: 'walk_up', frames: this.anims.generateFrameNumbers('player_walk_up', { start: 0, end: 3 }), frameRate: 4, repeat: -1 });
@@ -38,7 +42,8 @@ class EasterGame extends Phaser.Scene {
         this.anims.create({ key: 'projectile_hit', frames: this.anims.generateFrameNumbers('projectile', { start: 8, end: 16 }), frameRate: 10, repeat: 0 });
 
         this.anims.create({ key: 'legendary_appear', frames: this.anims.generateFrameNumbers('legendary', { start: 0, end: 8 }), frameRate: 5, repeat: -1 });
-
+        this.textures.get('firework').setFilter(Phaser.Textures.FilterMode.NEAREST);
+        this.textures.get('projectile').setFilter(Phaser.Textures.FilterMode.NEAREST);
         this.player = this.physics.add.sprite(50, 50, 'player_walk_down');
         this.player.setCollideWorldBounds(true);
         this.keys = this.input.keyboard.addKeys({
@@ -60,6 +65,7 @@ class EasterGame extends Phaser.Scene {
         });
 
         this.pipichicks = this.physics.add.group();
+        this.pipichickPositions = [];
 
         for (let i = 0; i < this.maxChicks; i++) {
             const x = Phaser.Math.Between(64, this.scale.width - 64);
@@ -76,7 +82,23 @@ class EasterGame extends Phaser.Scene {
         this.physics.add.collider(this.pipichicks, this.player);
         this.physics.add.overlap(this.projectiles, this.pipichicks, this.hitPipichick, null, this);
     }
+    launchFirework(x, y) {
+        const firework = this.add.sprite(x, y, 'firework');
+        firework.setDepth(Phaser.Math.Between(0, 1));
+        firework.setScale(4);
+        firework.play('firework_rise');
 
+        this.tweens.add({
+            targets: firework,
+            y: y - 64,
+            duration: 800,
+            ease: 'Sine.easeOut',
+            onComplete: () => {
+                firework.play('firework_burst');
+                firework.once('animationcomplete', () => firework.destroy());
+            }
+        });
+    }
     shootProjectile() {
         const projectile = this.projectiles.create(this.player.x, this.player.y, 'projectile');
         projectile.play('projectile_toss');
@@ -98,6 +120,7 @@ class EasterGame extends Phaser.Scene {
     hitPipichick(projectile, chick) {
         const x = chick.x;
         const y = chick.y;
+        this.pipichickPositions.push({ x, y });
         projectile.destroy();
         chick.destroy();
 
@@ -119,6 +142,7 @@ class EasterGame extends Phaser.Scene {
         hitAnim.play('projectile_hit');
         hitAnim.on('animationcomplete', () => {
             //hitAnim.destroy();
+            this.pipichickPositions.forEach(({ x, y }) => this.launchFirework(x, y));
         });
     }
 
