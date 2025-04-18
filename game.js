@@ -12,6 +12,7 @@ class EasterGame extends Phaser.Scene {
     }
 
     preload() {
+        this.load.spritesheet('win', ' /assets/endScreenV1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.image('background', '/assets/backyard.png');
         this.load.tilemapTiledJSON('map', '/assets/backyard.tmj');
         this.load.image('tiles', '/assets/backyard.png');
@@ -23,6 +24,11 @@ class EasterGame extends Phaser.Scene {
         this.load.spritesheet('projectile', '/assets/easteregg3.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('legendary', '/assets/Legendary.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('firework', 'assets/pinkFW.png', { frameWidth: 128, frameHeight: 128 });
+        this.load.audio('firework_sfx', 'assets/sfx/fireworks.mp3');
+        this.load.audio('toss_sfx', 'assets/sfx/toss_sfx.mp3');
+        this.load.audio('hit_sfx', 'assets/sfx/hit_sfx.mp3');
+        this.load.audio('winning_music', 'assets/sfx/winning_music.mp3');
+
     }
 
     create() {
@@ -44,6 +50,7 @@ class EasterGame extends Phaser.Scene {
         this.anims.create({ key: 'legendary_appear', frames: this.anims.generateFrameNumbers('legendary', { start: 0, end: 8 }), frameRate: 5, repeat: -1 });
         this.textures.get('firework').setFilter(Phaser.Textures.FilterMode.NEAREST);
         this.textures.get('projectile').setFilter(Phaser.Textures.FilterMode.NEAREST);
+        this.textures.get('win').setFilter(Phaser.Textures.FilterMode.NEAREST);
         this.player = this.physics.add.sprite(50, 50, 'player_walk_down');
         this.player.setCollideWorldBounds(true);
         this.keys = this.input.keyboard.addKeys({
@@ -77,6 +84,11 @@ class EasterGame extends Phaser.Scene {
             chick.setVelocity(Phaser.Math.Between(-32, 32), Phaser.Math.Between(-32, 32));
             chick.nextMoveTime = 0;
         }
+        this.winOverlay = this.add.sprite(this.scale.width / 2, this.scale.height / 2, 'win', 0);
+this.winOverlay.setScale(4); // Adjust size to fill screen
+this.winOverlay.setScrollFactor(0); // Make sure it doesn't move with the camera
+this.winOverlay.setDepth(999); // Make sure it's above everything
+this.winOverlay.setVisible(false); // Hidden until the player wins
 
         this.physics.add.collider(this.pipichicks, this.pipichicks);
         this.physics.add.collider(this.pipichicks, this.player);
@@ -100,6 +112,19 @@ class EasterGame extends Phaser.Scene {
         });
     }
     shootProjectile() {
+        const snippet = this.sound.add('toss_sfx');
+
+// Play starting at 1 second, for about 0.5 seconds
+snippet.play({
+    seek: 1.75,        // start at 1 second into the audio
+    volume: 1,
+});
+
+// Stop it manually after 500ms if you want strict control
+this.time.delayedCall(1000, () => {
+    snippet.stop();
+});
+
         const projectile = this.projectiles.create(this.player.x, this.player.y, 'projectile');
         projectile.play('projectile_toss');
 
@@ -126,6 +151,13 @@ class EasterGame extends Phaser.Scene {
 
         const hitAnim = this.add.sprite(x, y, 'projectile');
         hitAnim.play('projectile_hit');
+        const snippet = this.sound.add('hit_sfx');
+
+// Play starting at 1 second, for about 0.5 seconds
+snippet.play({
+    loop:false,        // start at 1 second into the audio
+    volume: 1,
+});
         hitAnim.on('animationcomplete', () => {
             //hitAnim.destroy();
             if (this.pipichicks.countActive(true) === 0 && !this.legendarySpawned) {
@@ -133,16 +165,52 @@ class EasterGame extends Phaser.Scene {
             }
         });
     }
+    startFireworkLoop() {
 
+        const launchNext = () => {
+            if (this.pipichickPositions.length === 0) return;
+    
+            const randomIndex = Phaser.Math.Between(0, this.pipichickPositions.length - 1);
+            const { x, y } = this.pipichickPositions[randomIndex];
+            this.launchFirework(x, y);
+    
+            // Delay the next firework
+            this.time.delayedCall(500, launchNext); // 500ms delay between each firework
+        };
+        this.music = this.sound.add('firework_sfx', {
+            loop: true,
+            volume: 0.5 // adjust as needed
+        });
+        this.music.play();
+        launchNext(); // Start the loop
+    }
+    
     hitLegendary(projectile, legendary) {
         projectile.destroy();
         legendary.destroy();
 
         const hitAnim = this.add.sprite(legendary.x, legendary.y, 'projectile');
         hitAnim.play('projectile_hit');
+        const snippet = this.sound.add('hit_sfx');
+
+// Play starting at 1 second, for about 0.5 seconds
+snippet.play({
+    loop:false,        // start at 1 second into the audio
+    volume: 1,
+});
         hitAnim.on('animationcomplete', () => {
             //hitAnim.destroy();
-            this.pipichickPositions.forEach(({ x, y }) => this.launchFirework(x, y));
+            this.startFireworkLoop();
+            this.winOverlay.setVisible(true);
+            const winning = this.sound.add('winning_music');
+
+// Play starting at 1 second, for about 0.5 seconds
+winning.play({
+    loop:false,        // start at 1 second into the audio
+    volume: .5,
+});
+
+
         });
     }
 
@@ -239,6 +307,7 @@ class TitleScreen extends Phaser.Scene {
         Phaser.GameObjects.Image.DefaultPipeline = 'TextureTintPipeline';
         Phaser.GameObjects.Sprite.DefaultPipeline = 'TextureTintPipeline';
         Phaser.Textures.FilterMode = Phaser.Textures.FilterMode.NEAREST;
+        this.load.audio('title_music', 'assets/music/game_music_loop.mp3');
 
         this.load.spritesheet('title_anim', 'assets/Title3.png', {
             frameWidth: 128,
@@ -247,6 +316,12 @@ class TitleScreen extends Phaser.Scene {
     }
 
     create() {
+        this.music = this.sound.add('title_music', {
+            loop: true,
+            volume: 0.5 // adjust as needed
+        });
+        this.music.play();
+        
         this.textures.get('title_anim').setFilter(Phaser.Textures.FilterMode.NEAREST);
 
         this.anims.create({
